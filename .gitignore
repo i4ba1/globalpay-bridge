@@ -1,0 +1,46 @@
+## .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+/artifacts/
+TestResults/
+coverage/
+*.coverage
+*.trx
+*.nupkg
+*.log
+
+## IDE and editor state
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.sln.DotSettings.user
+*.code-workspace
+.mono/
+
+## Azure Functions local settings (holds local credentials)
+local.settings.json
+.azurefunctions/
+appsettings.*.local.json
+
+## Node tooling (docs walkthrough harness)
+node_modules/
+npm-debug.log*
+
+## Generated SQL from `dotnet ef migrations script`
+schema.sql
+
+## Walkthrough debug output.
+## Note: the gallery GIFs and artifacts/manifest.json ARE committed; only failure dumps are ignored,
+## and /artifacts/ above is anchored to the repository root so nested folders are not caught by it.
+docs/walkthrough/artifacts/failure.*
+
+## Docker / local data volumes
+.docker-data/
+
+## OS noise
+Thumbs.db
+.DS_Store

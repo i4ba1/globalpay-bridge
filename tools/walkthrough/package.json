@@ -1,0 +1,16 @@
+{
+  "name": "globalpay-walkthrough",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright-driven walkthrough of the GlobalPay Bridge Swagger UI, captured as one animated GIF per step.",
+  "scripts": {
+    "capture": "node capture.mjs",
+    "seed": "node seed.mjs"
+  },
+  "dependencies": {
+    "gifenc": "^1.0.3",
+    "playwright": "^1.49.0",
+    "pngjs": "^7.0.0"
+  }
+}

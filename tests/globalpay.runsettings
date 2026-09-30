@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Run test projects sequentially. Three test hosts starting in parallel can exhaust memory on a
+         developer machine and fail with "Failed to create CoreCLR, HRESULT: 0x8007000E". The same
+         constraint is applied by -m:1 on the command line. -->
+    <MaxCpuCount>1</MaxCpuCount>
+    <TestSessionTimeout>900000</TestSessionTimeout>
+  </RunConfiguration>
+</RunSettings>

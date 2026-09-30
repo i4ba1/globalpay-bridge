@@ -1,0 +1,219 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "database/**"
+      - "infrastructure/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: dev
+        type: choice
+        options: [dev, test, prod]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+  BASE_NAME: ${{ vars.BASE_NAME }}
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore GlobalPayBridge.slnx
+
+      - name: Build
+        run: dotnet build GlobalPayBridge.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test GlobalPayBridge.slnx --no-build --configuration Release -m:1
+
+      - name: Publish API
+        run: dotnet publish src/GlobalPay.Api/GlobalPay.Api.csproj --no-build --configuration Release --output ./artifacts/api
+
+      - name: Publish Functions
+        run: dotnet publish src/GlobalPay.Functions/GlobalPay.Functions.csproj --no-build --configuration Release --output ./artifacts/functions
+
+      - name: Publish migration bundle
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef migrations bundle \
+            --project src/GlobalPay.Infrastructure \
+            --startup-project src/GlobalPay.Infrastructure \
+            --configuration Release \
+            --output ./artifacts/efbundle
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: drop
+          path: ./artifacts
+
+  deploy-infrastructure:
+    name: Deploy infrastructure
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    outputs:
+      apiName: ${{ steps.deploy.outputs.apiName }}
+      functionAppName: ${{ steps.deploy.outputs.functionAppName }}
+      apiUrl: ${{ steps.deploy.outputs.apiUrl }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Bicep
+        id: deploy
+        shell: bash
+        env:
+          SQL_ADMIN_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
+          OIDC_AUTHORITY: ${{ vars.OIDC_AUTHORITY }}
+          PROVIDER_BASE_ADDRESS: ${{ vars.PAYMENT_PROVIDER_BASE_ADDRESS }}
+        run: |
+          ENVIRONMENT="${{ github.event.inputs.environment || 'dev' }}"
+
+          OUTPUTS=$(az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "globalpay-${ENVIRONMENT}-${{ github.run_number }}" \
+            --template-file infrastructure/bicep/main.bicep \
+            --parameters environment="$ENVIRONMENT" \
+                         baseName="$BASE_NAME" \
+                         sqlAdminLogin="globalpayadmin" \
+                         sqlAdminPassword="$SQL_ADMIN_PASSWORD" \
+                         oidcAuthority="$OIDC_AUTHORITY" \
+                         paymentProviderBaseAddress="$PROVIDER_BASE_ADDRESS" \
+            --query "properties.outputs" \
+            --output json)
+
+          echo "apiName=$(echo "$OUTPUTS" | jq -r '.apiName.value // empty')" >> "$GITHUB_OUTPUT"
+          echo "functionAppName=$(echo "$OUTPUTS" | jq -r '.functionAppName.value')" >> "$GITHUB_OUTPUT"
+          echo "apiUrl=$(echo "$OUTPUTS" | jq -r '.apiUrl.value')" >> "$GITHUB_OUTPUT"
+
+  migrate:
+    name: Apply database migrations
+    needs: [build, deploy-infrastructure]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: drop
+          path: ./artifacts
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run migration bundle
+        shell: bash
+        env:
+          ConnectionStrings__GlobalPay: ${{ secrets.SQL_CONNECTION_STRING }}
+        run: |
+          chmod +x ./artifacts/efbundle
+          ./artifacts/efbundle --connection "$ConnectionStrings__GlobalPay"
+
+  deploy-api:
+    name: Deploy API
+    needs: [build, migrate]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: drop
+          path: ./artifacts
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to staging slot
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ needs.deploy-infrastructure.outputs.apiName }}
+          slot-name: staging
+          package: ./artifacts/api
+
+      - name: Smoke test staging slot
+        shell: bash
+        run: |
+          for attempt in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ needs.deploy-infrastructure.outputs.apiName }}-staging.azurewebsites.net/health/ready" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Staging slot is healthy"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Staging slot did not become healthy"
+          exit 1
+
+      - name: Swap into production
+        shell: bash
+        run: |
+          az webapp deployment slot swap \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "${{ needs.deploy-infrastructure.outputs.apiName }}" \
+            --slot staging
+
+  deploy-functions:
+    name: Deploy Functions
+    needs: [build, migrate]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: drop
+          path: ./artifacts
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: azure/functions-action@v1
+        with:
+          app-name: ${{ needs.deploy-infrastructure.outputs.functionAppName }}
+          package: ./artifacts/functions
+
+  verify:
+    name: Verify deployment
+    needs: [deploy-infrastructure, deploy-api, deploy-functions]
+    runs-on: ubuntu-latest
+    steps:
+      - name: API liveness and readiness
+        shell: bash
+        run: |
+          curl --fail --silent --show-error "${{ needs.deploy-infrastructure.outputs.apiUrl }}/health/live"
+          echo "Deployment verification complete"

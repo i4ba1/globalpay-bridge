@@ -1,0 +1,53 @@
+{
+  "_comment": "Test data for the Swagger walkthrough. {{RUN}} is replaced with a run marker so repeated runs stay idempotent-safe (worker external references are unique per tenant).",
+  "currency": "USD",
+  "period": {
+    "start": "2026-09-01",
+    "end": "2026-09-30"
+  },
+  "workers": [
+    {
+      "key": "ada",
+      "externalRef": "W-{{RUN}}-001",
+      "displayName": "Ada Lovelace",
+      "email": "ada.lovelace@example.test",
+      "contract": {
+        "startDate": "2026-01-01",
+        "endDate": null,
+        "currency": "USD",
+        "components": [
+          { "type": "Earning", "code": "BASE", "rule": "HourlyRate", "amount": 25 },
+          { "type": "Deduction", "code": "TAX", "rule": "PercentOfGross", "amount": 10 }
+        ]
+      }
+    },
+    {
+      "key": "grace",
+      "externalRef": "W-{{RUN}}-002",
+      "displayName": "Grace Hopper",
+      "email": "grace.hopper@example.test",
+      "contract": {
+        "startDate": "2026-01-01",
+        "endDate": null,
+        "currency": "USD",
+        "components": [
+          { "type": "Earning", "code": "BASE", "rule": "HourlyRate", "amount": 30 },
+          { "type": "Deduction", "code": "TAX", "rule": "PercentOfGross", "amount": 10 }
+        ]
+      }
+    }
+  ],
+  "timesheet": [
+    { "worker": "ada", "workDate": "2026-09-02", "units": 8, "componentCode": "BASE" },
+    { "worker": "ada", "workDate": "2026-09-03", "units": 8, "componentCode": "BASE" },
+    { "worker": "grace", "workDate": "2026-09-02", "units": 8, "componentCode": "BASE" },
+    { "worker": "grace", "workDate": "2026-09-04", "units": 4, "componentCode": "BASE" }
+  ],
+  "expected": {
+    "_comment": "Ada: 16h x 25 = 400 gross, 10% tax = 40, net 360. Grace: 12h x 30 = 360 gross, 36 tax, net 324.",
+    "workerCount": 2,
+    "gross": 760,
+    "deduction": 76,
+    "net": 684
+  }
+}

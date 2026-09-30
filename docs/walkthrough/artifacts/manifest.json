@@ -1,0 +1,191 @@
+{
+  "generatedAt": "2026-09-28T02:04:38.790Z",
+  "finishedAt": "2026-09-28T02:06:20.190Z",
+  "runMarker": "4715",
+  "testData": {
+    "csv": "timesheets-2026-09-4715.csv",
+    "sha256": "b6b9a27105c380a0d885dba3e266fe4a8f4cf470048bc44f5a04f41600adccd7",
+    "workers": [
+      "W-4715-001",
+      "W-4715-002"
+    ],
+    "period": {
+      "start": "2026-09-01",
+      "end": "2026-09-30"
+    },
+    "expected": {
+      "_comment": "Ada: 16h x 25 = 400 gross, 10% tax = 40, net 360. Grace: 12h x 30 = 360 gross, 36 tax, net 324.",
+      "workerCount": 2,
+      "gross": 760,
+      "deduction": 76,
+      "net": 684
+    },
+    "importId": "8adf9ccf-2f92-4333-813c-2fc8a810063f",
+    "payrollRunId": "8932d702-5018-4923-9ec2-e6994b952092",
+    "paymentBatchId": "166cc300-a96e-46fa-9cc3-d756213430b5"
+  },
+  "steps": [
+    {
+      "id": "01-open-swagger",
+      "title": "Open the Swagger UI",
+      "file": "01-open-swagger.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 1,
+      "bytes": 27516
+    },
+    {
+      "id": "02-authorize-admin",
+      "title": "Authorize with an admin token",
+      "file": "02-authorize-admin.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 2,
+      "bytes": 59677
+    },
+    {
+      "id": "03-create-worker-ada",
+      "title": "Create worker W-4715-001",
+      "file": "03-create-worker-ada.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 68575
+    },
+    {
+      "id": "04-create-worker-grace",
+      "title": "Create worker W-4715-002",
+      "file": "04-create-worker-grace.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 66508
+    },
+    {
+      "id": "05-create-contract-ada",
+      "title": "Create an effective-dated contract (hourly earning + 10% deduction)",
+      "file": "05-create-contract-ada.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 92926
+    },
+    {
+      "id": "06-create-contract-grace",
+      "title": "Create the second contract",
+      "file": "06-create-contract-grace.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 98018
+    },
+    {
+      "id": "07-register-import",
+      "title": "Register the timesheet import and get a scoped upload URL",
+      "file": "07-register-import.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 84887
+    },
+    {
+      "id": "08-import-processed",
+      "title": "Upload the CSV and let the Functions host validate and import it",
+      "file": "08-import-processed.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 93515
+    },
+    {
+      "id": "09-create-payroll-run",
+      "title": "Create a payroll run over the September period",
+      "file": "09-create-payroll-run.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 76245
+    },
+    {
+      "id": "10-calculate-run",
+      "title": "Calculate a deterministic gross-to-net snapshot",
+      "file": "10-calculate-run.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 102157
+    },
+    {
+      "id": "11-submit-run",
+      "title": "Submit the run for approval (maker)",
+      "file": "11-submit-run.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 90770
+    },
+    {
+      "id": "12-approve-run",
+      "title": "Approve as approver.user — the creator cannot approve their own run",
+      "file": "12-approve-run.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 85036
+    },
+    {
+      "id": "13-read-run",
+      "title": "Read the run: totals, calculation version and allowed actions",
+      "file": "13-read-run.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 97969
+    },
+    {
+      "id": "14-variance",
+      "title": "Variance report against the prior period",
+      "file": "14-variance.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 94481
+    },
+    {
+      "id": "15-create-payment-batch",
+      "title": "Finance submits the payment batch with an Idempotency-Key",
+      "file": "15-create-payment-batch.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 90851
+    },
+    {
+      "id": "16-payment-settled",
+      "title": "Outbox dispatch submits to the provider; a signed webhook settles it",
+      "file": "16-payment-settled.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 92645
+    },
+    {
+      "id": "17-audit-timeline",
+      "title": "Auditor reads the immutable audit timeline",
+      "file": "17-audit-timeline.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 77124
+    },
+    {
+      "id": "18-reconciliation",
+      "title": "Finance reviews reconciliation exceptions",
+      "file": "18-reconciliation.gif",
+      "width": 900,
+      "height": 485,
+      "frames": 4,
+      "bytes": 79738
+    }
+  ]
+}

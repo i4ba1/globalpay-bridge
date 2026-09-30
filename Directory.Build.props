@@ -1,0 +1,29 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <NoWarn>$(NoWarn);CS1591;NU5104;CA1000;CA1819;CA1303;CA1812;CA1848;CA1707;CA1019;CA1716;CA1873</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>GlobalPay Bridge</Company>
+    <Product>GlobalPay Bridge</Product>
+    <Authors>GlobalPay Bridge</Authors>
+    <VersionPrefix>0.1.0</VersionPrefix>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)tests/globalpay.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+
+</Project>

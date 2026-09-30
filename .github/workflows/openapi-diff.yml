@@ -1,0 +1,46 @@
+name: openapi-diff
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "src/GlobalPay.Api/**"
+      - "src/GlobalPay.Contracts/**"
+
+permissions:
+  contents: read
+
+jobs:
+  breaking-change-check:
+    name: Detect breaking API changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Generate OpenAPI for the base revision
+        run: |
+          git worktree add ../base ${{ github.event.pull_request.base.sha }}
+          dotnet build ../base/src/GlobalPay.Api/GlobalPay.Api.csproj --configuration Release
+          dotnet run --project ../base/src/GlobalPay.Api/GlobalPay.Api.csproj --no-build --configuration Release --urls http://localhost:5199 &
+          sleep 15
+          curl --fail --silent http://localhost:5199/openapi/v1.json > ./openapi-base.json
+          pkill -f GlobalPay.Api || true
+
+      - name: Generate OpenAPI for the head revision
+        run: |
+          dotnet build src/GlobalPay.Api/GlobalPay.Api.csproj --configuration Release
+          dotnet run --project src/GlobalPay.Api/GlobalPay.Api.csproj --no-build --configuration Release --urls http://localhost:5199 &
+          sleep 15
+          curl --fail --silent http://localhost:5199/openapi/v1.json > ./openapi-head.json
+          pkill -f GlobalPay.Api || true
+
+      - name: Compare specifications
+        run: |
+          npx --yes oasdiff@latest breaking ./openapi-base.json ./openapi-head.json

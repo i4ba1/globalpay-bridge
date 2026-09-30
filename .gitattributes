@@ -1,0 +1,26 @@
+# Normalize line endings on commit, check out platform-appropriate endings.
+* text=auto
+
+# Linux/container-consumed files must keep LF.
+*.sh text eol=lf
+*.mjs text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+
+# Windows-centric project files keep CRLF.
+*.slnx text eol=crlf
+*.csproj text eol=crlf
+*.props text eol=crlf
+*.targets text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets are never converted.
+*.gif binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
+*.snk binary

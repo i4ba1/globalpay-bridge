@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GlobalPay.Api/GlobalPay.Api.csproj" />
+    <Project Path="src/GlobalPay.Application/GlobalPay.Application.csproj" />
+    <Project Path="src/GlobalPay.Contracts/GlobalPay.Contracts.csproj" />
+    <Project Path="src/GlobalPay.Domain/GlobalPay.Domain.csproj" />
+    <Project Path="src/GlobalPay.Functions/GlobalPay.Functions.csproj" />
+    <Project Path="src/GlobalPay.Infrastructure/GlobalPay.Infrastructure.csproj" />
+    <Project Path="src/GlobalPay.ProviderSimulator/GlobalPay.ProviderSimulator.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GlobalPay.ArchitectureTests/GlobalPay.ArchitectureTests.csproj" />
+    <Project Path="tests/GlobalPay.IntegrationTests/GlobalPay.IntegrationTests.csproj" />
+    <Project Path="tests/GlobalPay.UnitTests/GlobalPay.UnitTests.csproj" />
+  </Folder>
+</Solution>
